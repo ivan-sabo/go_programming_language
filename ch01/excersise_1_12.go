@@ -1,14 +1,16 @@
-// Lissajous generates GIF animations of random Lissajous figures.
+// Lissajous server.
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"image/gif"
-	"io"
+	"log"
 	"math"
 	"math/rand"
-	"os"
+	"net/http"
+	"strconv"
 )
 
 var pallete = []color.Color{color.Black, color.RGBA{0x00, 0xff, 0x00, 0xff}}
@@ -19,17 +21,32 @@ const (
 )
 
 func main() {
-	lissajous(os.Stdout)
+	http.HandleFunc("/lissajous", lissajous)
+	log.Fatal(http.ListenAndServe("localhost:8000", nil))
 }
 
-func lissajous(out io.Writer) {
+func lissajous(w http.ResponseWriter, r *http.Request) {
 	const (
-		cycles  = 5     // number of complete x oscillator revolutions
 		res     = 0.001 // angular resolution
 		size    = 100   // image canvas covers [-size..+size]
 		nframes = 64    // number of animation frames
 		delay   = 8     // delay between frame in 10ms units
 	)
+
+	if err := r.ParseForm(); err != nil {
+		fmt.Fprintf(w, "Error: %v", err)
+		return
+	}
+	cycles := 5.0 // number of complete x oscillator revolutions
+	if r.FormValue("cycles") != "" {
+		var err error
+		cycles, err = strconv.ParseFloat(r.FormValue("cycles"), 32)
+		if err != nil {
+			fmt.Fprintf(w, "Error: %v", err)
+			return
+		}
+	}
+
 	freq := rand.Float64() * 3.0 // relative frequency of y oscillator
 	anim := gif.GIF{LoopCount: nframes}
 	phase := 0.0 // phase difference
@@ -45,5 +62,5 @@ func lissajous(out io.Writer) {
 		anim.Delay = append(anim.Delay, delay)
 		anim.Image = append(anim.Image, img)
 	}
-	gif.EncodeAll(out, &anim) // ignoring encoding errors
+	gif.EncodeAll(w, &anim) // ignoring encoding errors
 }

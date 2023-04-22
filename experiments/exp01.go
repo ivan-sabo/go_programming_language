@@ -15,8 +15,6 @@ func invertBits() {
 	fmt.Printf("Binary value: %b\n", value)
 	fmt.Printf("Binary value inverted: %b\n", ^value)
 
-	fmt.Printf("%c", value)
-
 }
 
 func convertStringToRune() {

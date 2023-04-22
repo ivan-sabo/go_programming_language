@@ -6,8 +6,15 @@ import (
 	"strconv"
 )
 
+const (
+	x = iota + 2
+	y
+	z
+)
+
 func main() {
 	invertBits()
+	fmt.Println(x)
 }
 
 func invertBits() {
